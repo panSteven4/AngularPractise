@@ -1,2 +1,2 @@
 # AngularPractise
-This repo should provide explained examples of angular and modern web-dev concepts
+This repo should contain explained examples of angular and modern web-dev concepts
