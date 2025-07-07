@@ -12,7 +12,7 @@ import {User} from '../models/song.model';
 export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = '/api/users'; // To fetch users for login
-  private _currentUserId = new BehaviorSubject<string | null>(null);
+  private _currentUserId = new BehaviorSubject<string | null>("u1"); // Default to a user ID for testing
 
   // Expose as a signal for easy consumption in components
   currentUserId = signal<string | null>(null);
