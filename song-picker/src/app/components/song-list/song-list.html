@@ -1,7 +1,14 @@
-<mat-list role="list">
+<mat-list>
   <h2>Ready to play!</h2>
-  <mat-list-item role="listitem">Item 1</mat-list-item>
-  <mat-list-item role="listitem">Item 2</mat-list-item>
-  <mat-list-item role="listitem">Item 3</mat-list-item>
+  @for (song of songs(); track song.id) {
+    <mat-list-item>
+      {{song.title}}
+    </mat-list-item>
+  }
+  <mat-list-item class="plus-button">
+    <button matMiniFab aria-label="Add new song">
+      <mat-icon>add</mat-icon>
+    </button>
+  </mat-list-item>
 </mat-list>
 

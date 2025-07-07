@@ -15,7 +15,7 @@ export class AuthService {
   private _currentUserId = new BehaviorSubject<string | null>("u1"); // Default to a user ID for testing
 
   // Expose as a signal for easy consumption in components
-  currentUserId = signal<string | null>(null);
+  currentUserId = signal<string>("u1");
 
   // A signal to indicate if the user is logged in
   isLoggedIn = signal(false);
@@ -23,7 +23,7 @@ export class AuthService {
   constructor() {
     // Synchronize the BehaviorSubject with the Signal
     this._currentUserId.subscribe(userId => {
-      this.currentUserId.set(userId);
+      userId && this.currentUserId.set(userId);
       this.isLoggedIn.set(!!userId); // Set isLoggedIn based on whether userId exists
     });
 
