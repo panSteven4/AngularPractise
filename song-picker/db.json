@@ -1,0 +1,74 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "username": "Alice",
+      "email": "alice@example.com",
+      "favoriteGenre": "Rock",
+      "password": "password123",
+      "playlists": [
+        {
+          "id": "p1",
+          "name": "Morning Jams",
+          "songIds": ["s1", "s3"]
+        },
+        {
+          "id": "p2",
+          "name": "Workout Mix",
+          "songIds": ["s2"]
+        }
+      ]
+    },
+    {
+      "id": "u2",
+      "username": "Bob",
+      "email": "bob@example.com",
+      "favoriteGenre": "Pop",
+      "password": "password123",
+      "playlists": [
+        {
+          "id": "p3",
+          "name": "Chill Vibes",
+          "songIds": ["s3", "s4"]
+        }
+      ]
+    }
+  ],
+  "songs": [
+    {
+      "id": "s1",
+      "title": "Bohemian Rhapsody",
+      "artist": "Queen",
+      "album": "A Night at the Opera",
+      "duration": "5:55"
+    },
+    {
+      "id": "s2",
+      "title": "Stairway to Heaven",
+      "artist": "Led Zeppelin",
+      "album": "Led Zeppelin IV",
+      "duration": "8:02"
+    },
+    {
+      "id": "s3",
+      "title": "Hotel California",
+      "artist": "Eagles",
+      "album": "Hotel California",
+      "duration": "6:30"
+    },
+    {
+      "id": "s4",
+      "title": "Billie Jean",
+      "artist": "Michael Jackson",
+      "album": "Thriller",
+      "duration": "4:54"
+    },
+    {
+      "id": "s5",
+      "title": "Smells Like Teen Spirit",
+      "artist": "Nirvana",
+      "album": "Nevermind",
+      "duration": "5:01"
+    }
+  ]
+}
