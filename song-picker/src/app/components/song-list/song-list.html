@@ -1,8 +1,8 @@
 <mat-list>
   <h2>Ready to play!</h2>
-  @for (song of songs(); track song.id) {
+  @for (song of songs(); track song) {
     <mat-list-item>
-      {{song.title}}
+      {{song}}
     </mat-list-item>
   }
   <mat-list-item class="plus-button">

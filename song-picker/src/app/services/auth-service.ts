@@ -1,10 +1,8 @@
-// src/app/auth.service.ts
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
-import { map, catchError, switchMap, tap } from 'rxjs/operators';
-import {User} from '../models/song.model';
-
+import { map, catchError, switchMap } from 'rxjs/operators';
+import { User } from '../models/song.model'; // Assuming User model is updated
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +13,7 @@ export class AuthService {
   private _currentUserId = new BehaviorSubject<string | null>("u1"); // Default to a user ID for testing
 
   // Expose as a signal for easy consumption in components
-  currentUserId = signal<string>("u1");
+  currentUserId = signal<string>("u1"); // Initial value, will be updated by _currentUserId subscription
 
   // A signal to indicate if the user is logged in
   isLoggedIn = signal(false);
@@ -23,8 +21,13 @@ export class AuthService {
   constructor() {
     // Synchronize the BehaviorSubject with the Signal
     this._currentUserId.subscribe(userId => {
-      userId && this.currentUserId.set(userId);
-      this.isLoggedIn.set(!!userId); // Set isLoggedIn based on whether userId exists
+      if (userId) {
+        this.currentUserId.set(userId);
+        this.isLoggedIn.set(true);
+      } else {
+        this.currentUserId.set(""); // Clear the current user ID
+        this.isLoggedIn.set(false);
+      }
     });
 
     // Simulate checking for a "session" on app start

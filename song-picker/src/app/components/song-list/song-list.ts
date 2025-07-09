@@ -5,8 +5,8 @@ import {MatIcon} from '@angular/material/icon';
 import {MatMiniFabButton} from '@angular/material/button';
 import {AuthService} from '../../services/auth-service';
 import {UserService} from '../../services/user.service';
-import {Song} from '../../models/song.model';
 import {toSignal} from '@angular/core/rxjs-interop';
+import {Song} from '../../models/song.model';
 
 
 @Component({
