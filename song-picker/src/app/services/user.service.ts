@@ -1,16 +1,46 @@
-// src/app/user.service.ts
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import {Observable, of, throwError} from 'rxjs';
-import { User } from '../models/song.model'; // Assuming User model is updated
+import { filter, Observable, of, tap, throwError } from 'rxjs';
+import { User, Song } from '../models/song.model'; // Song is now 'string'
 import { catchError, map, switchMap } from 'rxjs/operators';
+import { RxState } from '@rx-angular/state';
+import {AuthService} from './auth-service';
+
+// Update UserState to reflect that songs are now just strings
+export type UserState = {
+  songsToPlay: Song[]; // This means string[]
+  currentSong: Song | null; // This means string | null
+  alreadyPlayedSongs: Song[]; // This means string[]
+  loadingSongs: boolean;
+  error: string | null; // Consistent error property name
+}
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
-  private http = inject(HttpClient);
-  private apiUrl = '/api/users'; // Base API URL for users
+export class UserService extends RxState<UserState> {
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService); // Inject AuthService
+
+  private readonly apiUrl = '/api/users'; // Base API URL for users
+
+  constructor() {
+    super();
+    // Initialize state with default values
+    this.initState();
+
+    // todo connect user state to auth state
+  }
+
+  private initState() {
+    this.set({
+      songsToPlay: [],
+      currentSong: null,
+      alreadyPlayedSongs: [],
+      loadingSongs: false,
+      error: null
+    });
+  }
 
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.apiUrl);
@@ -23,11 +53,11 @@ export class UserService {
   /**
    * Retrieves all song names for a specific user.
    * @param userId The ID of the user.
-   * @returns An Observable of an array of song names (strings).
+   * @returns An Observable of an array of song names (strings), which is `Song[]`.
    */
-  getAllSongsForUser(userId: string): Observable<string[]> {
+  getAllSongsForUser(userId: string): Observable<Song[]> {
     return this.getUserById(userId).pipe(
-      map(user => user.songs || []), // Access the 'songs' array directly, or an empty array if null/undefined
+      map(user => user.songs || []), // Access the 'songs' array directly, which is string[]
       catchError(error => {
         console.error(`Error fetching songs for user ${userId}:`, error);
         return of([]); // Return an empty array on error
@@ -37,21 +67,22 @@ export class UserService {
 
   /**
    * Adds a song name to a user's list of songs.
-   * Note: This assumes uniqueness by name is not strictly enforced at the database level
-   * or will be handled by the backend if this service directly interacts with a real DB.
-   * For JSON-Server, it will simply add the name.
    * @param userId The ID of the user.
-   * @param songName The name of the song to add.
+   * @param songName The name of the song to add (type Song, which is string).
    * @returns An Observable of the updated User object.
    */
-  addUserSong(userId: string, songName: string): Observable<User> {
+  addUserSong(userId: string, songName: Song): Observable<User> {
     return this.getUserById(userId).pipe(
       switchMap(user => {
-        // Prevent adding duplicates if you desire, though your spec doesn't require it.
-        // For example: if (!user.songs.includes(songName)) {
         user.songs.push(songName);
-        // }
         return this.updateUser(user);
+      }),
+      tap(updatedUser => {
+        // Optimistically update the state after successful add
+        this.set('songsToPlay', (currentSongs) => [
+          ...currentSongs.songsToPlay,
+          songName // Add the new song name (string) directly
+        ]);
       }),
       catchError(error => {
         console.error(`Error adding song '${songName}' for user ${userId}:`, error);
@@ -62,37 +93,55 @@ export class UserService {
 
   /**
    * Deletes a song name from a user's list of songs.
-   * This will remove *all* occurrences of the given song name from the user's list.
-   * If you need to remove only one instance or handle duplicates differently,
-   * the logic here would need to be more complex (e.g., if songs were objects with unique IDs).
    * @param userId The ID of the user.
-   * @param songName The name of the song to delete.
+   * @param songName The name of the song to delete (type Song, which is string).
    * @returns An Observable of the updated User object.
    */
-  deleteUserSong(userId: string, songName: string): Observable<User> {
-    return this.getUserById(userId).pipe(
-      switchMap(user => {
-        // Filter out all occurrences of the songName
-        const initialLength = user.songs.length;
-        user.songs = user.songs.filter(name => name !== songName);
-
-        if (user.songs.length === initialLength) {
-          // If the song name wasn't found, no update is needed.
-          // You might choose to throw an error or just return the current user.
-          console.warn(`Song '${songName}' not found for user ${userId}. No deletion performed.`);
-          return of(user); // Or throw an error: throw new Error(`Song ${songName} not found`);
-        }
-        return this.updateUser(user);
-      }),
-      catchError(error => {
-        console.error(`Error deleting song '${songName}' for user ${userId}:`, error);
-        return throwError(() => new Error(`Could not delete song for user ${userId}`));
-      })
-    );
-  }
-
 
   updateUser(user: User): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/${user.id}`, user);
+  }
+
+  /**
+   * Selects the next song from songsToPlay and moves it to currentSong.
+   * Moves currentSong to alreadyPlayedSongs.
+   */
+  playNextSong(): void {
+    const currentState = this.get();
+    if (currentState.songsToPlay.length > 0) {
+      const nextSong = currentState.songsToPlay[0];
+      const remainingSongs = currentState.songsToPlay.slice(1);
+
+      const updatedAlreadyPlayed = currentState.currentSong
+        ? [...currentState.alreadyPlayedSongs, currentState.currentSong]
+        : currentState.alreadyPlayedSongs;
+
+      this.set({
+        songsToPlay: remainingSongs,
+        currentSong: nextSong,
+        alreadyPlayedSongs: updatedAlreadyPlayed
+      });
+    } else {
+      // No more songs to play, clear current song
+      this.set({ currentSong: null });
+    }
+  }
+
+  /**
+   * Resets the playback state, moving all songs back to songsToPlay.
+   */
+  resetPlayback(): void {
+    const currentState = this.get();
+    const allSongs = [
+      ...currentState.alreadyPlayedSongs,
+      ...(currentState.currentSong ? [currentState.currentSong] : []),
+      ...currentState.songsToPlay
+    ];
+
+    this.set({
+      songsToPlay: allSongs,
+      currentSong: null,
+      alreadyPlayedSongs: []
+    });
   }
 }

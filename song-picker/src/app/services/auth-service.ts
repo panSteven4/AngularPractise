@@ -1,8 +1,9 @@
+// src/app/auth.service.ts
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
-import { User } from '../models/song.model'; // Assuming User model is updated
+import { User } from '../models/song.model';
 
 @Injectable({
   providedIn: 'root'
@@ -31,7 +32,6 @@ export class AuthService {
     });
 
     // Simulate checking for a "session" on app start
-    // In a real app, you'd check localStorage for a token
     const storedUserId = localStorage.getItem('currentUserId');
     if (storedUserId) {
       this._currentUserId.next(storedUserId);
@@ -65,7 +65,6 @@ export class AuthService {
 
   // Get the full user object for the logged-in user
   getLoggedInUser(): Observable<User | null> {
-    // Using switchMap to react to currentUserId changes
     return this._currentUserId.pipe(
       switchMap(userId => {
         if (!userId) {

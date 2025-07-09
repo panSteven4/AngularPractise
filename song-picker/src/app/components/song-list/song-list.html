@@ -1,14 +1,27 @@
-<mat-list>
-  <h2>Ready to play!</h2>
-  @for (song of songs(); track song) {
-    <mat-list-item>
-      {{song}}
-    </mat-list-item>
-  }
-  <mat-list-item class="plus-button">
-    <button matMiniFab aria-label="Add new song">
-      <mat-icon>add</mat-icon>
-    </button>
-  </mat-list-item>
-</mat-list>
+<div class="main-container">
+  <h2>Ready to Play</h2>
 
+  @if (songsToPlay()?.length ?? 0 > 0) {
+    <mat-list>
+      @for (song of songsToPlay(); track song) {
+        <mat-list-item>
+          <span>{{ song }}</span>
+          <button mat-mini-fab color="warn" (click)="deleteSong(song)" class="delete-button">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-list-item>
+      }
+    </mat-list>
+  } @else {
+    <p>No songs available in your list.</p>
+  }
+
+  <h4>Add New Song to Your Library</h4>
+  <mat-form-field appearance="fill" class="add-song-input-field">
+    <mat-label>New Song Name</mat-label>
+    <input matInput [(ngModel)]="newSongName" placeholder="Enter song name">
+  </mat-form-field>
+  <button mat-mini-fab color="primary" (click)="addSong()">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
