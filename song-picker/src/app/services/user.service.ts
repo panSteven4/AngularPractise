@@ -9,7 +9,7 @@ import {AuthService} from './auth-service';
 // Update UserState to reflect that songs are now just strings
 export type UserState = {
   songsToPlay: Song[]; // This means string[]
-  currentSong: Song | null; // This means string | null
+  heroSong: Song | null; // This means string | null
   alreadyPlayedSongs: Song[]; // This means string[]
   loadingSongs: boolean;
   error: string | null; // Consistent error property name
@@ -35,7 +35,7 @@ export class UserService extends RxState<UserState> {
   private initState() {
     this.set({
       songsToPlay: [],
-      currentSong: null,
+      heroSong: null,
       alreadyPlayedSongs: [],
       loadingSongs: false,
       error: null
@@ -106,25 +106,48 @@ export class UserService extends RxState<UserState> {
    * Selects the next song from songsToPlay and moves it to currentSong.
    * Moves currentSong to alreadyPlayedSongs.
    */
-  playNextSong(): void {
+  playNextSong(songName?: Song): void {
     const currentState = this.get();
-    if (currentState.songsToPlay.length > 0) {
-      const nextSong = currentState.songsToPlay[0];
-      const remainingSongs = currentState.songsToPlay.slice(1);
+    let nextSong: Song | null = null;
+    let remainingSongs: Song[] = [...currentState.songsToPlay]; // Start with a mutable copy
 
-      const updatedAlreadyPlayed = currentState.currentSong
-        ? [...currentState.alreadyPlayedSongs, currentState.currentSong]
-        : currentState.alreadyPlayedSongs;
+    // First, move the current song (if any) to alreadyPlayedSongs
+    const updatedAlreadyPlayed = currentState.heroSong
+      ? [...currentState.alreadyPlayedSongs, currentState.heroSong]
+      : currentState.alreadyPlayedSongs;
 
-      this.set({
-        songsToPlay: remainingSongs,
-        currentSong: nextSong,
-        alreadyPlayedSongs: updatedAlreadyPlayed
-      });
+    if (songName) {
+      // Case 1: Specific songName is provided
+      const index = remainingSongs.indexOf(songName);
+      if (index !== -1) {
+        nextSong = remainingSongs[index];
+        // Remove the picked song from the remaining list
+        remainingSongs.splice(index, 1);
+      } else {
+        console.warn(`Song '${songName}' not found in songsToPlay. Picking a random song instead.`);
+        // Fallback to random if the specified song isn't in the list
+        if (remainingSongs.length > 0) {
+          const randomIndex = Math.floor(Math.random() * remainingSongs.length);
+          nextSong = remainingSongs[randomIndex];
+          remainingSongs.splice(randomIndex, 1);
+        }
+      }
     } else {
-      // No more songs to play, clear current song
-      this.set({ currentSong: null });
+      // Case 2: Pick a random song from the list
+      if (remainingSongs.length > 0) {
+        const randomIndex = Math.floor(Math.random() * remainingSongs.length);
+        nextSong = remainingSongs[randomIndex];
+        // Remove the picked song from the remaining list
+        remainingSongs.splice(randomIndex, 1);
+      }
     }
+
+    // Update the state based on the chosen song
+    this.set({
+      songsToPlay: remainingSongs,
+      heroSong: nextSong, // nextSong will be null if no songs are left
+      alreadyPlayedSongs: updatedAlreadyPlayed
+    });
   }
 
   /**
@@ -134,13 +157,13 @@ export class UserService extends RxState<UserState> {
     const currentState = this.get();
     const allSongs = [
       ...currentState.alreadyPlayedSongs,
-      ...(currentState.currentSong ? [currentState.currentSong] : []),
+      ...(currentState.heroSong ? [currentState.heroSong] : []),
       ...currentState.songsToPlay
     ];
 
     this.set({
       songsToPlay: allSongs,
-      currentSong: null,
+      heroSong: null,
       alreadyPlayedSongs: []
     });
   }

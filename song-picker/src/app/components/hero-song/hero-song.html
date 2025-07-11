@@ -1,4 +1,12 @@
 <div class="main-container">
-  <h1 class="mat-display-1">{{ heroSong() }}</h1>
-  <button matButton="outlined" (click)="pickNewSong()">pick random</button>
+  <h1 class="mat-display-1">{{ heroSong() ?? 'no song'}}</h1>
+  <button matButton="outlined" (click)="playNextSong()" [disabled]="(songsToPlay()?.length === 0) && heroSong() == null">
+    @if (songsToPlay()?.length ?? 0 > 0) {
+      Pick random
+    } @else if (heroSong() != null) {
+      Move to already played
+    } @else {
+      No songs available
+    }
+  </button>
 </div>

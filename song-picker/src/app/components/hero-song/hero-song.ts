@@ -1,6 +1,7 @@
 import {Component, inject, signal, WritableSignal} from '@angular/core';
 import {MatButton} from '@angular/material/button';
 import {UserService} from '../../services/user.service';
+import {toSignal} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-hero-song',
@@ -12,9 +13,10 @@ import {UserService} from '../../services/user.service';
 })
 export class HeroSong {
   private readonly userService = inject(UserService);
-  heroSong: WritableSignal<string> = signal("no song yet")
+  heroSong = toSignal(this.userService.select('heroSong'));
+  songsToPlay = toSignal(this.userService.select('songsToPlay'));
 
-  pickNewSong() {
-
+  playNextSong() {
+    this.userService.playNextSong();
   }
 }
